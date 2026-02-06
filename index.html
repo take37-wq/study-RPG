@@ -12,8 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
 
 <style>
-/* ===== 背景が途切れない対策 ===== */
-html, body{
+html,body{
   min-height:100%;
 }
 body{
@@ -27,19 +26,20 @@ body{
 header{
   background:#fff;
   text-align:center;
-  padding:12px;
+  padding:14px;
   border-bottom:4px solid #ff6f91;
 }
 .sprite{
   width:80px;
   height:80px;
+  image-rendering:pixelated;
 }
 .stats{
-  font-size:15px;
-  line-height:1.4;
+  font-size:16px;
+  line-height:1.5;
 }
 
-/* ===== ナビ（スマホ安全対応） ===== */
+/* ===== ナビ ===== */
 nav{
   position:fixed;
   bottom:0;
@@ -61,9 +61,6 @@ nav button.active{
   background:#ff6f91;
   color:#fff;
 }
-nav button:disabled{
-  opacity:.3;
-}
 
 /* ===== セクション ===== */
 section{
@@ -71,11 +68,9 @@ section{
   padding:16px;
   padding-bottom:120px;
 }
-section.active{
-  display:block;
-}
+section.active{ display:block; }
 
-/* ===== カードUI ===== */
+/* ===== カード ===== */
 .card{
   background:#fff;
   padding:14px;
@@ -83,7 +78,7 @@ section.active{
   margin-bottom:12px;
   box-shadow:0 6px 0 #ff6f91;
 }
-input, select{
+input,select{
   width:100%;
   padding:8px;
   border-radius:12px;
@@ -112,7 +107,7 @@ canvas{
   margin:0 auto;
 }
 
-/* ===== 演出テキスト ===== */
+/* ===== 演出 ===== */
 #effectText{
   position:fixed;
   top:50%;
@@ -122,6 +117,7 @@ canvas{
   font-size:36px;
   display:none;
   z-index:999;
+  text-shadow:0 0 12px rgba(255,255,255,.9);
 }
 </style>
 </head>
@@ -146,7 +142,6 @@ canvas{
       <option value="2">緊急度：中</option>
       <option value="3">緊急度：高</option>
     </select>
-    <input id="taskDeadline" type="date">
     <button onclick="addTask()">タスク追加</button>
   </div>
   <div id="taskList"></div>
@@ -189,6 +184,7 @@ canvas{
 
 <script>
 let busy=false;
+let effectLock=false;
 let weekOffset=0;
 
 let data=JSON.parse(localStorage.getItem("studyPopRPG"))||{
@@ -202,6 +198,7 @@ let data=JSON.parse(localStorage.getItem("studyPopRPG"))||{
 };
 
 if(!data.name) data.name=prompt("プレイヤー名を入力");
+
 const save=()=>localStorage.setItem("studyPopRPG",JSON.stringify(data));
 const expToNext=()=>data.level*100;
 
@@ -213,6 +210,7 @@ function spriteByLevel(){
 
 /* ===== 演出 ===== */
 function showEffect(text,color){
+  if(effectLock) return;
   effectText.textContent=text;
   effectText.style.color=color;
   effectText.style.fontSize="36px";
@@ -220,14 +218,16 @@ function showEffect(text,color){
   setTimeout(()=>effectText.style.display="none",600);
 }
 function showLevelUp(){
+  effectLock=true;
   effectText.textContent="LEVEL UP!!";
   effectText.style.color="#FFD700";
-  effectText.style.fontSize="42px";
+  effectText.style.fontSize="44px";
   effectText.style.display="block";
   setTimeout(()=>{
     effectText.style.display="none";
     effectText.style.fontSize="36px";
-  },800);
+    effectLock=false;
+  },1200);
 }
 
 /* ===== レベル判定 ===== */
@@ -244,12 +244,8 @@ function levelCheck(){
 /* ===== タスク ===== */
 function addTask(){
   if(!taskTitle.value) return;
-  data.tasks.push({
-    title:taskTitle.value,
-    urgency:+taskUrgency.value,
-    deadline:taskDeadline.value||null
-  });
-  taskTitle.value=taskDeadline.value="";
+  data.tasks.push({title:taskTitle.value,urgency:+taskUrgency.value});
+  taskTitle.value="";
   save(); render();
 }
 function completeTask(i){
@@ -314,7 +310,6 @@ function drawChart(){
 
   c.width=cssW*dpr;
   c.height=cssH*dpr;
-
   const ctx=c.getContext("2d");
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,cssW,cssH);
