@@ -1,28 +1,29 @@
 {
   "name": "Study Pop RPG",
-  "short_name": "StudyRPG",
-  "start_url": "index.html",
+  "short_name": "Study RPG",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ff6f91",
+  "background_color": "#eef6ff",
+  "theme_color": "#3b82f6",
+
   "icons": [
     {
-      "src": "icon/Piskel-3.png",
+      "src": "images/icon-144.png",
       "sizes": "144x144",
       "type": "image/png"
     },
     {
-      "src": "icon/Piskel-1.png",
+      "src": "images/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon/Piskel-4.png",
+      "src": "images/icon-256.png",
       "sizes": "256x256",
       "type": "image/png"
     },
     {
-      "src": "icon/Piskel-2.png",
+      "src": "images/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
