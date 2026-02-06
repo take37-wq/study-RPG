@@ -7,7 +7,7 @@
   "theme_color": "#ff6f91",
   "icons": [
     {
-      "src": "icons/icon-144.png",
+      "src": "icon/Piskel-3.png",
       "sizes": "144x144",
       "type": "image/png"
     },
