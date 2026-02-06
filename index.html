@@ -2,300 +2,328 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Study Pop RPG</title>
 
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Study RPG">
+<link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
 
 <style>
-*{box-sizing:border-box;}
-body{
+html,body{
   margin:0;
-  min-height:100vh;
-  background:linear-gradient(#eef6ff,#dbeafe);
-  font-family:-apple-system,BlinkMacSystemFont,
-    "Hiragino Sans","Noto Sans JP",sans-serif;
+  min-height:100%;
+}
+body{
+  font-family:'Kosugi Maru', monospace;
+  background:linear-gradient(135deg,#ff9a9e,#fad0c4);
 }
 
+/* ===== ヘッダー ===== */
 header{
-  padding:12px;
-  text-align:center;
-  font-weight:bold;
-  font-size:20px;
-}
-
-main{
-  padding-bottom:90px;
-}
-
-section{
-  display:none;
-  padding:12px;
-}
-section.active{display:block;}
-
-.status{
-  text-align:center;
-}
-.status img{
-  width:160px;
-  image-rendering:pixelated;
-}
-.status p{
-  font-size:18px;
-  margin:6px 0;
-}
-
-.card{
   background:#fff;
-  border-radius:12px;
-  padding:10px;
-  margin:8px 0;
-  box-shadow:0 2px 4px rgba(0,0,0,.1);
+  text-align:center;
+  padding:12px;
+  border-bottom:4px solid #ff6f91;
+}
+.sprite{
+  width:80px;
+  height:80px;
+}
+.stats{
+  font-size:16px;
 }
 
-button{
-  padding:6px 12px;
-  border:none;
-  border-radius:8px;
-  background:#3b82f6;
-  color:#fff;
-  font-size:14px;
-}
-button:disabled{opacity:.5;}
-
-.nav{
+/* ===== ナビ ===== */
+nav{
   position:fixed;
   bottom:0;
-  left:0;
-  right:0;
-  display:flex;
-  background:#fff;
-  border-top:1px solid #ccc;
-}
-.nav button{
-  flex:1;
-  border-radius:0;
-  background:#fff;
-  color:#333;
-}
-
-#chart{
   width:100%;
-  height:220px;
-  border:1px solid #ccc;
-  background:#fff;
-}
-.chart-nav{
   display:flex;
-  justify-content:space-between;
-  margin:6px 0;
+  background:#fff;
+  border-top:4px solid #ff6f91;
+}
+nav button{
+  flex:1;
+  padding:12px;
+  border:none;
+  background:#fff;
+  color:#ff6f91;
+}
+nav button.active{
+  background:#ff6f91;
+  color:#fff;
 }
 
-.effect{
+/* ===== セクション ===== */
+section{
+  display:none;
+  padding:16px;
+  padding-bottom:120px;
+}
+section.active{
+  display:block;
+}
+
+/* ===== カード ===== */
+.card{
+  background:#fff;
+  padding:14px;
+  border-radius:16px;
+  margin-bottom:12px;
+  box-shadow:0 6px 0 #ff6f91;
+}
+input,select{
+  width:100%;
+  padding:8px;
+  border-radius:12px;
+  border:2px solid #ff6f91;
+  margin-bottom:6px;
+}
+button{
+  background:#ff6f91;
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  padding:8px 12px;
+  box-shadow:0 4px 0 #d94f70;
+}
+button:active{
+  transform:translateY(4px);
+  box-shadow:none;
+}
+
+/* ===== グラフ ===== */
+canvas{
+  width:100%;
+  max-width:340px;
+  height:220px;
+  display:block;
+  margin:0 auto;
+}
+
+/* ===== 演出 ===== */
+#effect{
   position:fixed;
-  top:40%;
+  top:50%;
   left:50%;
   transform:translate(-50%,-50%);
-  background:#111;
-  color:#fff;
-  padding:12px 18px;
-  border-radius:12px;
-  font-size:20px;
-  opacity:0;
-  pointer-events:none;
-}
-.effect.show{
-  animation:pop 1.4s forwards;
-}
-@keyframes pop{
-  0%{opacity:0;transform:translate(-50%,-60%) scale(.8);}
-  20%{opacity:1;transform:translate(-50%,-50%) scale(1.1);}
-  80%{opacity:1;}
-  100%{opacity:0;}
+  font-size:36px;
+  font-weight:bold;
+  display:none;
+  z-index:999;
 }
 </style>
 </head>
 
 <body>
-<header>📘 Study Pop RPG</header>
 
-<main>
-<section id="home" class="active">
-  <div class="status">
-    <img id="sprite">
-    <p>Lv <span id="level"></span></p>
-    <p>EXP <span id="exp"></span></p>
-    <p>総学習時間：<span id="totalTime"></span> 分</p>
-    <p>連続日数：<span id="streak"></span> 日</p>
+<header>
+  <div id="playerName"></div>
+  <img id="sprite" class="sprite">
+  <div class="stats">
+    Lv.<span id="level"></span>/50<br>
+    EXP <span id="exp"></span><br>
+    💰 <span id="gold"></span>
   </div>
+</header>
+
+<section id="tasks" class="active">
+  <div class="card">
+    <input id="taskTitle" placeholder="タスク名">
+    <select id="taskUrgency">
+      <option value="1">緊急度：低</option>
+      <option value="2">緊急度：中</option>
+      <option value="3">緊急度：高</option>
+    </select>
+    <button onclick="addTask()">タスク追加</button>
+  </div>
+  <div id="taskList"></div>
 </section>
 
 <section id="study">
   <div class="card">
-    <input id="studyInput" type="number" placeholder="勉強時間（分）">
+    <input id="studyMinutes" type="number" placeholder="勉強時間（分）">
     <button onclick="addStudy()">記録</button>
   </div>
 
-  <div class="chart-nav">
-    <button onclick="prevWeek()" id="prevBtn">◀</button>
-    <button onclick="nextWeek()" id="nextBtn">▶</button>
+  <div class="card">
+    合計学習時間：<span id="totalStudy">0</span> 分
   </div>
-  <canvas id="chart"></canvas>
-</section>
 
-<section id="task">
-  <div id="taskList"></div>
+  <div class="card">
+    <canvas id="studyChart"></canvas>
+  </div>
 </section>
 
 <section id="shop">
+  <div class="card">
+    <input id="itemName" placeholder="リワード名">
+    <input id="itemCost" type="number" placeholder="必要G">
+    <button onclick="addShopItem()">追加</button>
+  </div>
   <div id="shopList"></div>
 </section>
-</main>
 
-<div class="nav">
-  <button onclick="show('home')">ホーム</button>
-  <button onclick="show('study')">勉強</button>
-  <button onclick="show('task')">タスク</button>
-  <button onclick="show('shop')">交換所</button>
-</div>
+<nav>
+  <button class="active" onclick="showTab('tasks',this)">タスク</button>
+  <button onclick="showTab('study',this)">勉強</button>
+  <button onclick="showTab('shop',this)">交換所</button>
+</nav>
 
-<div id="effect" class="effect"></div>
+<div id="effect"></div>
 
 <script>
-const data=JSON.parse(localStorage.getItem("data"))||{
-  level:1,exp:0,total:0,streak:0,
-  history:{},week:0,
-  tasks:[{title:"英語10分",urgency:1}],
-  shopItems:[{name:"ごほうび",cost:50}]
+let data=JSON.parse(localStorage.getItem("studyPopRPG"))||{
+  name:"",
+  level:1,
+  exp:0,
+  gold:0,
+  tasks:[],
+  shopItems:[],
+  studyLogs:{}
 };
 
-const sprite=document.getElementById("sprite");
-const level=document.getElementById("level");
-const exp=document.getElementById("exp");
-const totalTime=document.getElementById("totalTime");
-const streak=document.getElementById("streak");
-
-function expMax(){return data.level*100;}
+if(!data.name) data.name=prompt("プレイヤー名を入力");
+const save=()=>localStorage.setItem("studyPopRPG",JSON.stringify(data));
+const expToNext=()=>data.level*100;
 
 function spriteByLevel(){
-  if(data.level<5) return "image/New Piskel-1.png";
-  if(data.level<10) return "image/New Piskel-3.png";
-  return "image/New Piskel-2.png";
+  if(data.level<15) return "sprite1.png";
+  if(data.level<30) return "sprite2.png";
+  return "sprite3.png";
 }
 
-function effect(text){
-  const e=document.getElementById("effect");
-  e.textContent=text;
-  e.classList.remove("show");
-  void e.offsetWidth;
-  e.classList.add("show");
+/* ===== 演出 ===== */
+function showEffect(text,color){
+  effect.textContent=text;
+  effect.style.color=color;
+  effect.style.display="block";
+  setTimeout(()=>effect.style.display="none",600);
+}
+function showLevelUp(){
+  showEffect("LEVEL UP!!","#FFD700");
 }
 
-function addStudy(){
-  const v=Number(studyInput.value);
-  if(!v) return;
-  const d=new Date().toISOString().slice(0,10);
-  data.history[d]=(data.history[d]||0)+v;
-  data.total+=v;
-  data.exp+=v;
-  while(data.exp>=expMax()){
-    data.exp-=expMax();
+/* ===== レベル ===== */
+function levelCheck(){
+  while(data.exp>=expToNext() && data.level<50){
+    data.exp-=expToNext();
     data.level++;
-    effect("LEVEL UP!");
+    showLevelUp();
   }
-  effect("記録");
-  save();
-  drawChart();
-  render();
 }
 
+/* ===== タスク ===== */
+function addTask(){
+  if(!taskTitle.value) return;
+  data.tasks.push({
+    title:taskTitle.value,
+    urgency:+taskUrgency.value
+  });
+  taskTitle.value="";
+  save(); render();
+}
 function completeTask(i){
-  data.exp+=30;
-  effect("完了");
+  const t=data.tasks[i];
   data.tasks.splice(i,1);
-  save();render();
+  data.exp+=t.urgency*30;
+  data.gold+=t.urgency*10;
+  levelCheck();
+  showEffect("完了","#00aaee");
+  save(); render();
 }
 
+/* ===== 勉強 ===== */
+function addStudy(){
+  const min=+studyMinutes.value;
+  if(min<=0) return;
+  const d=new Date().toISOString().split("T")[0];
+  data.studyLogs[d]=(data.studyLogs[d]||0)+min;
+  data.exp+=min;
+  data.gold+=Math.floor(min/2);
+  levelCheck();
+  studyMinutes.value="";
+  showEffect("記録","#00cc66");
+  save(); render();
+}
+
+/* ===== 交換所 ===== */
+function addShopItem(){
+  if(!itemName.value||!itemCost.value) return;
+  data.shopItems.push({name:itemName.value,cost:+itemCost.value});
+  itemName.value=itemCost.value="";
+  save(); render();
+}
 function buyItem(i){
-  if(data.exp<data.shopItems[i].cost) return;
-  data.exp-=data.shopItems[i].cost;
-  effect("購入");
-  save();render();
+  const s=data.shopItems[i];
+  if(data.gold<s.cost) return;
+  data.gold-=s.cost;
+  showEffect("購入","#ff9933");
+  save(); render();
 }
 
+/* ===== グラフ ===== */
+function drawChart(){
+  const c=studyChart;
+  const ctx=c.getContext("2d");
+  c.width=340;
+  c.height=220;
+  ctx.clearRect(0,0,340,220);
+
+  const days=Object.keys(data.studyLogs);
+  const vals=Object.values(data.studyLogs);
+  const max=Math.max(60,...vals);
+  const w=340/(vals.length||1);
+
+  vals.forEach((v,i)=>{
+    const h=(v/max)*160;
+    ctx.fillStyle="#ff6f91";
+    ctx.fillRect(i*w+10,200-h,w-20,h);
+  });
+
+  totalStudy.textContent=vals.reduce((a,b)=>a+b,0);
+}
+
+/* ===== タブ ===== */
+function showTab(id,btn){
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  btn.classList.add("active");
+  if(id==="study") drawChart();
+}
+
+/* ===== 描画 ===== */
 function render(){
+  playerName.textContent=data.name;
   level.textContent=data.level;
-  exp.textContent=data.exp+"/"+expMax();
-  totalTime.textContent=data.total;
-  streak.textContent=data.streak;
+  exp.textContent=data.exp+"/"+expToNext();
+  gold.textContent=data.gold;
   sprite.src=spriteByLevel();
 
   taskList.innerHTML="";
   data.tasks.forEach((t,i)=>{
     taskList.innerHTML+=`
-    <div class="card">
-      ${t.title}
-      <button onclick="completeTask(${i})">完了</button>
-    </div>`;
+      <div class="card">
+        ${t.title}<br>
+        緊急度：${["低","中","高"][t.urgency-1]}<br>
+        <button onclick="completeTask(${i})">完了</button>
+      </div>`;
   });
 
   shopList.innerHTML="";
   data.shopItems.forEach((s,i)=>{
     shopList.innerHTML+=`
-    <div class="card">
-      ${s.name} (${s.cost}EXP)
-      <button onclick="buyItem(${i})">交換</button>
-    </div>`;
+      <div class="card">
+        ${s.name}<br>
+        必要G：${s.cost}<br>
+        <button onclick="buyItem(${i})">交換</button>
+      </div>`;
   });
-}
 
-function show(id){
-  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  if(id==="study") drawChart();
-}
-
-const canvas=document.getElementById("chart");
-const ctx=canvas.getContext("2d");
-
-function drawChart(){
-  canvas.width=canvas.clientWidth;
-  canvas.height=220;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.font="14px sans-serif";
-  const days=[];
-  const now=new Date();
-  for(let i=0;i<7;i++){
-    const d=new Date(now);
-    d.setDate(d.getDate()-d.getDay()+i+data.week*7);
-    days.push(d);
-  }
-  days.forEach((d,i)=>{
-    const key=d.toISOString().slice(0,10);
-    const v=data.history[key];
-    if(v){
-      const h=v*2;
-      ctx.fillRect(i*45+20,200-h,30,h);
-    }
-    ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`,i*45+10,215);
-  });
-}
-
-function save(){
-  localStorage.setItem("data",JSON.stringify(data));
+  drawChart();
 }
 
 render();
-
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js");
-}
 </script>
 </body>
 </html>
