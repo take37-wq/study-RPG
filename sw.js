@@ -5,7 +5,7 @@ const ASSETS=[
   "./manifest.json",
   "./image/New Piskel-1.png",
   "./image/New Piskel-2.png",
-  "./images/Piskel-3.png"
+  "./image/New Piskel-3.png"
 ];
 
 self.addEventListener("install",e=>{
