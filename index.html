@@ -206,9 +206,9 @@ const save=()=>localStorage.setItem("studyPopRPG",JSON.stringify(data));
 const expToNext=()=>data.level*100;
 
 function spriteByLevel(){
-  if(data.level<15) return "sprite1.png";
-  if(data.level<30) return "sprite2.png";
-  return "sprite3.png";
+  if(data.level < 15) return "images/New Piskel-1.png";
+  if(data.level < 30) return "images/New Piskel-2.png";
+  return "images/New Piskel-3.png";
 }
 
 /* ===== 演出 ===== */
