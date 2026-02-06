@@ -3,7 +3,7 @@ const ASSETS=[
   "./",
   "./index.html",
   "./manifest.json",
-  "./images/Piskel-1.png",
+  "./image/New Piskel-1.png",
   "./images/Piskel-2.png",
   "./images/Piskel-3.png"
 ];
