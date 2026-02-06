@@ -12,32 +12,43 @@
 <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
 
 <style>
+/* ===== 背景が途切れない対策 ===== */
+html, body{
+  min-height:100%;
+}
 body{
   margin:0;
   font-family:'Kosugi Maru', monospace;
   background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+  background-attachment:fixed;
 }
+
+/* ===== ヘッダー ===== */
 header{
   background:#fff;
   text-align:center;
   padding:12px;
   border-bottom:4px solid #ff6f91;
 }
-.sprite{width:80px;height:80px}
-
-/* ステータス文字を少し大きく */
+.sprite{
+  width:80px;
+  height:80px;
+}
 .stats{
   font-size:15px;
   line-height:1.4;
 }
 
+/* ===== ナビ（スマホ安全対応） ===== */
 nav{
   position:fixed;
   bottom:0;
+  left:0;
   width:100%;
   display:flex;
   background:#fff;
   border-top:4px solid #ff6f91;
+  padding-bottom:env(safe-area-inset-bottom);
 }
 nav button{
   flex:1;
@@ -50,15 +61,21 @@ nav button.active{
   background:#ff6f91;
   color:#fff;
 }
-nav button:disabled{opacity:.3}
+nav button:disabled{
+  opacity:.3;
+}
 
+/* ===== セクション ===== */
 section{
   display:none;
   padding:16px;
-  padding-bottom:90px;
+  padding-bottom:120px;
 }
-section.active{display:block}
+section.active{
+  display:block;
+}
 
+/* ===== カードUI ===== */
 .card{
   background:#fff;
   padding:14px;
@@ -66,7 +83,7 @@ section.active{display:block}
   margin-bottom:12px;
   box-shadow:0 6px 0 #ff6f91;
 }
-input,select{
+input, select{
   width:100%;
   padding:8px;
   border-radius:12px;
@@ -86,14 +103,23 @@ button:active{
   box-shadow:none;
 }
 
-/* 演出テキスト */
+/* ===== グラフ ===== */
+canvas{
+  width:100%;
+  max-width:340px;
+  height:220px;
+  display:block;
+  margin:0 auto;
+}
+
+/* ===== 演出テキスト ===== */
 #effectText{
   position:fixed;
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
-  font-size:36px;
   font-weight:bold;
+  font-size:36px;
   display:none;
   z-index:999;
 }
@@ -140,7 +166,7 @@ button:active{
   <div class="card" style="text-align:center">
     <button onclick="changeWeek(-1)">◀</button>
     <button id="nextWeekBtn" onclick="changeWeek(1)">▶</button><br><br>
-    <canvas id="studyChart" width="350" height="220"></canvas>
+    <canvas id="studyChart"></canvas>
   </div>
 </section>
 
@@ -167,21 +193,25 @@ let weekOffset=0;
 
 let data=JSON.parse(localStorage.getItem("studyPopRPG"))||{
   name:"",
-  level:1,exp:0,gold:0,
-  tasks:[],shopItems:[],studyLogs:{}
+  level:1,
+  exp:0,
+  gold:0,
+  tasks:[],
+  shopItems:[],
+  studyLogs:{}
 };
 
-if(!data.name)data.name=prompt("プレイヤー名を入力");
+if(!data.name) data.name=prompt("プレイヤー名を入力");
 const save=()=>localStorage.setItem("studyPopRPG",JSON.stringify(data));
 const expToNext=()=>data.level*100;
 
 function spriteByLevel(){
-  if(data.level<15)return"sprite1.png";
-  if(data.level<30)return"sprite2.png";
-  return"sprite3.png";
+  if(data.level<15) return "sprite1.png";
+  if(data.level<30) return "sprite2.png";
+  return "sprite3.png";
 }
 
-/* 通常演出 */
+/* ===== 演出 ===== */
 function showEffect(text,color){
   effectText.textContent=text;
   effectText.style.color=color;
@@ -189,8 +219,6 @@ function showEffect(text,color){
   effectText.style.display="block";
   setTimeout(()=>effectText.style.display="none",600);
 }
-
-/* レベルアップ演出 */
 function showLevelUp(){
   effectText.textContent="LEVEL UP!!";
   effectText.style.color="#FFD700";
@@ -202,30 +230,30 @@ function showLevelUp(){
   },800);
 }
 
-/* レベル判定 */
+/* ===== レベル判定 ===== */
 function levelCheck(){
-  let leveled=false;
-  while(data.exp>=expToNext()&&data.level<50){
+  let up=false;
+  while(data.exp>=expToNext() && data.level<50){
     data.exp-=expToNext();
     data.level++;
-    leveled=true;
+    up=true;
   }
-  if(leveled) showLevelUp();
+  if(up) showLevelUp();
 }
 
-/* タスク */
+/* ===== タスク ===== */
 function addTask(){
-  if(!taskTitle.value)return;
+  if(!taskTitle.value) return;
   data.tasks.push({
     title:taskTitle.value,
     urgency:+taskUrgency.value,
     deadline:taskDeadline.value||null
   });
   taskTitle.value=taskDeadline.value="";
-  save();render();
+  save(); render();
 }
 function completeTask(i){
-  if(busy)return;
+  if(busy) return;
   busy=true;
   const t=data.tasks[i];
   data.tasks.splice(i,1);
@@ -233,14 +261,14 @@ function completeTask(i){
   data.gold+=t.urgency*10;
   levelCheck();
   showEffect("完了","#00aaee");
-  save();render();
+  save(); render();
   setTimeout(()=>busy=false,600);
 }
 
-/* 勉強 */
+/* ===== 勉強 ===== */
 function addStudy(){
   const min=+studyMinutes.value;
-  if(min<=0)return;
+  if(min<=0) return;
   const d=new Date().toISOString().split("T")[0];
   data.studyLogs[d]=(data.studyLogs[d]||0)+min;
   data.exp+=min;
@@ -248,38 +276,48 @@ function addStudy(){
   levelCheck();
   studyMinutes.value="";
   showEffect("記録","#00cc66");
-  save();render();
+  save(); render();
 }
 
-/* 交換所 */
+/* ===== 交換所 ===== */
 function addShopItem(){
-  if(!itemName.value||!itemCost.value)return;
+  if(!itemName.value||!itemCost.value) return;
   data.shopItems.push({name:itemName.value,cost:+itemCost.value});
   itemName.value=itemCost.value="";
-  save();render();
+  save(); render();
 }
 function buyItem(i){
   const s=data.shopItems[i];
-  if(data.gold<s.cost)return;
+  if(data.gold<s.cost) return;
   data.gold-=s.cost;
   showEffect("購入","#ff9933");
-  save();render();
+  save(); render();
 }
 
-/* グラフ */
+/* ===== グラフ ===== */
 function getWeekDates(){
   const t=new Date();
   const s=new Date(t);
   s.setDate(t.getDate()-t.getDay()+weekOffset*7);
   return [...Array(7)].map((_,i)=>{
-    const d=new Date(s);d.setDate(s.getDate()+i);
+    const d=new Date(s);
+    d.setDate(s.getDate()+i);
     return d;
   });
 }
+
 function drawChart(){
   const c=studyChart;
+  const dpr=window.devicePixelRatio||1;
+  const cssW=c.clientWidth;
+  const cssH=220;
+
+  c.width=cssW*dpr;
+  c.height=cssH*dpr;
+
   const ctx=c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cssW,cssH);
 
   ctx.font="12px 'Kosugi Maru'";
   ctx.textAlign="center";
@@ -288,40 +326,40 @@ function drawChart(){
   const names=["日","月","火","水","木","金","土"];
   const vals=dates.map(d=>data.studyLogs[d.toISOString().split("T")[0]]||0);
   const max=Math.max(60,...vals);
-  const w=c.width/7;
+  const w=cssW/7;
 
   vals.forEach((v,i)=>{
     const x=i*w;
     ctx.fillStyle="#000";
-    ctx.fillText(names[i],x+w/2,c.height-22);
-    ctx.fillText((dates[i].getMonth()+1)+"/"+dates[i].getDate(),x+w/2,c.height-8);
-    if(v<=0)return;
-    const h=(v/max)*(c.height-60);
+    ctx.fillText(names[i],x+w/2,cssH-22);
+    ctx.fillText((dates[i].getMonth()+1)+"/"+dates[i].getDate(),x+w/2,cssH-8);
+    if(v<=0) return;
+    const h=(v/max)*(cssH-60);
     ctx.fillStyle="#ff6f91";
-    ctx.fillRect(x+12,c.height-h-30,w-24,h);
+    ctx.fillRect(x+12,cssH-h-30,w-24,h);
     ctx.fillStyle="#000";
-    ctx.fillText(v+"分",x+w/2,c.height-h-36);
+    ctx.fillText(v+"分",x+w/2,cssH-h-36);
   });
 
   nextWeekBtn.disabled = weekOffset>=0;
 }
 
 function changeWeek(n){
-  if(weekOffset+n>0)return;
+  if(weekOffset+n>0) return;
   weekOffset+=n;
   drawChart();
 }
 
-/* タブ */
+/* ===== タブ ===== */
 function showTab(id,btn){
   document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   btn.classList.add("active");
-  if(id==="study")drawChart();
+  if(id==="study") drawChart();
 }
 
-/* 描画 */
+/* ===== 描画 ===== */
 function render(){
   playerName.textContent=data.name;
   level.textContent=data.level;
@@ -332,21 +370,21 @@ function render(){
   taskList.innerHTML="";
   data.tasks.forEach((t,i)=>{
     taskList.innerHTML+=`
-    <div class="card">
-      ${t.title}<br>
-      緊急度：${["低","中","高"][t.urgency-1]}<br>
-      <button onclick="completeTask(${i})">完了</button>
-    </div>`;
+      <div class="card">
+        ${t.title}<br>
+        緊急度：${["低","中","高"][t.urgency-1]}<br>
+        <button onclick="completeTask(${i})">完了</button>
+      </div>`;
   });
 
   shopList.innerHTML="";
   data.shopItems.forEach((s,i)=>{
     shopList.innerHTML+=`
-    <div class="card">
-      ${s.name}<br>
-      必要G：${s.cost}<br>
-      <button onclick="buyItem(${i})">交換</button>
-    </div>`;
+      <div class="card">
+        ${s.name}<br>
+        必要G：${s.cost}<br>
+        <button onclick="buyItem(${i})">交換</button>
+      </div>`;
   });
 
   drawChart();
