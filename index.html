@@ -5,41 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Study Pop RPG</title>
 
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff6f91">
+
 <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
 
 <style>
 html,body{
-  margin:0;
   min-height:100%;
 }
 body{
+  margin:0;
   font-family:'Kosugi Maru', monospace;
   background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+  background-attachment:fixed;
 }
 
 /* ===== ヘッダー ===== */
 header{
   background:#fff;
   text-align:center;
-  padding:12px;
+  padding:14px;
   border-bottom:4px solid #ff6f91;
 }
 .sprite{
   width:80px;
   height:80px;
+  image-rendering:pixelated;
 }
 .stats{
   font-size:16px;
+  line-height:1.5;
 }
 
 /* ===== ナビ ===== */
 nav{
   position:fixed;
   bottom:0;
+  left:0;
   width:100%;
   display:flex;
   background:#fff;
   border-top:4px solid #ff6f91;
+  padding-bottom:env(safe-area-inset-bottom);
 }
 nav button{
   flex:1;
@@ -59,9 +68,7 @@ section{
   padding:16px;
   padding-bottom:120px;
 }
-section.active{
-  display:block;
-}
+section.active{ display:block; }
 
 /* ===== カード ===== */
 .card{
@@ -101,15 +108,16 @@ canvas{
 }
 
 /* ===== 演出 ===== */
-#effect{
+#effectText{
   position:fixed;
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
-  font-size:36px;
   font-weight:bold;
+  font-size:36px;
   display:none;
   z-index:999;
+  text-shadow:0 0 12px rgba(255,255,255,.9);
 }
 </style>
 </head>
@@ -146,10 +154,13 @@ canvas{
   </div>
 
   <div class="card">
-    合計学習時間：<span id="totalStudy">0</span> 分
+    合計学習時間：<span id="totalStudy">0</span> 分<br>
+    連続学習日数：<span id="streak">0</span> 日
   </div>
 
-  <div class="card">
+  <div class="card" style="text-align:center">
+    <button onclick="changeWeek(-1)">◀</button>
+    <button id="nextWeekBtn" onclick="changeWeek(1)">▶</button><br><br>
     <canvas id="studyChart"></canvas>
   </div>
 </section>
@@ -169,9 +180,13 @@ canvas{
   <button onclick="showTab('shop',this)">交換所</button>
 </nav>
 
-<div id="effect"></div>
+<div id="effectText"></div>
 
 <script>
+let busy=false;
+let effectLock=false;
+let weekOffset=0;
+
 let data=JSON.parse(localStorage.getItem("studyPopRPG"))||{
   name:"",
   level:1,
@@ -183,46 +198,59 @@ let data=JSON.parse(localStorage.getItem("studyPopRPG"))||{
 };
 
 if(!data.name) data.name=prompt("プレイヤー名を入力");
+
 const save=()=>localStorage.setItem("studyPopRPG",JSON.stringify(data));
 const expToNext=()=>data.level*100;
 
 function spriteByLevel(){
-  if(data.level<15) return "sprite1.png";
-  if(data.level<30) return "sprite2.png";
-  return "sprite3.png";
+  if(data.level<15) return "images/New Piskel-1.png";
+  if(data.level<30) return "images/New Piskel-2.png";
+  return "images/New Piskel-3.png";
 }
 
 /* ===== 演出 ===== */
 function showEffect(text,color){
-  effect.textContent=text;
-  effect.style.color=color;
-  effect.style.display="block";
-  setTimeout(()=>effect.style.display="none",600);
+  if(effectLock) return;
+  effectText.textContent=text;
+  effectText.style.color=color;
+  effectText.style.fontSize="36px";
+  effectText.style.display="block";
+  setTimeout(()=>effectText.style.display="none",600);
 }
 function showLevelUp(){
-  showEffect("LEVEL UP!!","#FFD700");
+  effectLock=true;
+  effectText.textContent="LEVEL UP!!";
+  effectText.style.color="#FFD700";
+  effectText.style.fontSize="44px";
+  effectText.style.display="block";
+  setTimeout(()=>{
+    effectText.style.display="none";
+    effectText.style.fontSize="36px";
+    effectLock=false;
+  },1200);
 }
 
-/* ===== レベル ===== */
+/* ===== レベル判定 ===== */
 function levelCheck(){
+  let up=false;
   while(data.exp>=expToNext() && data.level<50){
     data.exp-=expToNext();
     data.level++;
-    showLevelUp();
+    up=true;
   }
+  if(up) showLevelUp();
 }
 
 /* ===== タスク ===== */
 function addTask(){
   if(!taskTitle.value) return;
-  data.tasks.push({
-    title:taskTitle.value,
-    urgency:+taskUrgency.value
-  });
+  data.tasks.push({title:taskTitle.value,urgency:+taskUrgency.value});
   taskTitle.value="";
   save(); render();
 }
 function completeTask(i){
+  if(busy) return;
+  busy=true;
   const t=data.tasks[i];
   data.tasks.splice(i,1);
   data.exp+=t.urgency*30;
@@ -230,6 +258,7 @@ function completeTask(i){
   levelCheck();
   showEffect("完了","#00aaee");
   save(); render();
+  setTimeout(()=>busy=false,600);
 }
 
 /* ===== 勉強 ===== */
@@ -262,25 +291,58 @@ function buyItem(i){
 }
 
 /* ===== グラフ ===== */
+function getWeekDates(){
+  const t=new Date();
+  const s=new Date(t);
+  s.setDate(t.getDate()-t.getDay()+weekOffset*7);
+  return [...Array(7)].map((_,i)=>{
+    const d=new Date(s);
+    d.setDate(s.getDate()+i);
+    return d;
+  });
+}
+
 function drawChart(){
   const c=studyChart;
-  const ctx=c.getContext("2d");
-  c.width=340;
-  c.height=220;
-  ctx.clearRect(0,0,340,220);
+  const dpr=window.devicePixelRatio||1;
+  const cssW=c.clientWidth;
+  const cssH=220;
 
-  const days=Object.keys(data.studyLogs);
-  const vals=Object.values(data.studyLogs);
+  c.width=cssW*dpr;
+  c.height=cssH*dpr;
+  const ctx=c.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cssW,cssH);
+
+  ctx.font="12px 'Kosugi Maru'";
+  ctx.textAlign="center";
+
+  const dates=getWeekDates();
+  const names=["日","月","火","水","木","金","土"];
+  const vals=dates.map(d=>data.studyLogs[d.toISOString().split("T")[0]]||0);
   const max=Math.max(60,...vals);
-  const w=340/(vals.length||1);
+  const w=cssW/7;
 
   vals.forEach((v,i)=>{
-    const h=(v/max)*160;
+    const x=i*w;
+    ctx.fillStyle="#000";
+    ctx.fillText(names[i],x+w/2,cssH-22);
+    ctx.fillText((dates[i].getMonth()+1)+"/"+dates[i].getDate(),x+w/2,cssH-8);
+    if(v<=0) return;
+    const h=(v/max)*(cssH-60);
     ctx.fillStyle="#ff6f91";
-    ctx.fillRect(i*w+10,200-h,w-20,h);
+    ctx.fillRect(x+12,cssH-h-30,w-24,h);
+    ctx.fillStyle="#000";
+    ctx.fillText(v+"分",x+w/2,cssH-h-36);
   });
 
-  totalStudy.textContent=vals.reduce((a,b)=>a+b,0);
+  nextWeekBtn.disabled = weekOffset>=0;
+}
+
+function changeWeek(n){
+  if(weekOffset+n>0) return;
+  weekOffset+=n;
+  drawChart();
 }
 
 /* ===== タブ ===== */
