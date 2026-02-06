@@ -1,119 +1,101 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Study RPG</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Pop RPG</title>
+
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#111111">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Study RPG">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#ff6f91">
+
+<link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+
 <style>
-body {
-  font-family: 'Press Start 2P', monospace;
-  margin: 0;
-  background: linear-gradient(to bottom, #1a1a1a, #111);
-  color: #eee;
+body{
+  margin:0;
+  font-family:'Kosugi Maru', monospace;
+  background:linear-gradient(135deg,#ff9a9e,#fad0c4);
 }
-header {
-  text-align: center;
-  padding: 10px;
-  background: #222;
-  border-bottom: 2px solid #0f0;
+header{
+  background:#fff;
+  text-align:center;
+  padding:12px;
+  border-bottom:4px solid #ff6f91;
 }
-header #playerName { font-size: 16px; margin-bottom: 4px; }
-header img.sprite {
-  border: 2px solid #0f0;
-  border-radius: 50%;
-  background: #111;
-  padding: 4px;
-  box-shadow: 0 0 10px #0f0;
-  transition: transform 0.5s ease, opacity 0.5s ease;
-}
-header div { margin-top: 4px; font-size: 14px; }
+.sprite{width:80px;height:80px}
 
-nav {
-  display: flex;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: #222;
-  border-top: 2px solid #0f0;
-}
-nav button {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  background: #222;
-  color: #aaa;
-  font-weight: bold;
-}
-nav button.active {
-  color: #0f0;
-  text-shadow: 0 0 5px #0f0;
+/* ステータス文字を少し大きく */
+.stats{
+  font-size:15px;
+  line-height:1.4;
 }
 
-section {
-  display: none;
-  padding: 16px;
-  padding-bottom: 70px;
+nav{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  display:flex;
+  background:#fff;
+  border-top:4px solid #ff6f91;
 }
-section.active { display: block; }
+nav button{
+  flex:1;
+  padding:12px;
+  border:none;
+  background:#fff;
+  color:#ff6f91;
+}
+nav button.active{
+  background:#ff6f91;
+  color:#fff;
+}
+nav button:disabled{opacity:.3}
 
-.card {
-  background: linear-gradient(to bottom, #333, #222);
-  border: 2px solid #0f0;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 10px;
-  box-shadow: 0 0 10px #0f0;
+section{
+  display:none;
+  padding:16px;
+  padding-bottom:90px;
+}
+section.active{display:block}
+
+.card{
+  background:#fff;
+  padding:14px;
+  border-radius:16px;
+  margin-bottom:12px;
+  box-shadow:0 6px 0 #ff6f91;
+}
+input,select{
+  width:100%;
+  padding:8px;
+  border-radius:12px;
+  border:2px solid #ff6f91;
+  margin-bottom:6px;
+}
+button{
+  background:#ff6f91;
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  padding:8px 12px;
+  box-shadow:0 4px 0 #d94f70;
+}
+button:active{
+  transform:translateY(4px);
+  box-shadow:none;
 }
 
-button {
-  background: linear-gradient(to bottom, #0f0, #0a0);
-  border: 2px solid #080;
-  color: #000;
-  font-weight: bold;
-  padding: 6px 10px;
-  border-radius: 4px;
-  text-shadow: 0 0 2px #fff;
-  cursor: pointer;
-  margin-left: 6px;
-}
-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 8px #0f0;
-}
-
-input, select {
-  width: 100%;
-  padding: 6px;
-  margin-bottom: 6px;
-}
-
-#taskList .card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#daily button {
-  background: linear-gradient(to bottom, #ff0, #aa0);
-  border: 2px solid #880;
-  color: #000;
-  font-weight: bold;
-  padding: 6px 12px;
-  border-radius: 6px;
-  text-shadow: 0 0 2px #fff;
-  margin-top: 6px;
-}
-
-@media (max-width: 600px) {
-  header div, header img { font-size: 12px; }
-  nav button { font-size: 10px; }
-  .card { padding: 10px; }
+/* 演出テキスト */
+#effectText{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-size:36px;
+  font-weight:bold;
+  display:none;
+  z-index:999;
 }
 </style>
 </head>
@@ -122,181 +104,255 @@ input, select {
 
 <header>
   <div id="playerName"></div>
-  <img id="sprite" src="sprite1.png" alt="キャラクター" class="sprite">
-  <div>Lv.<span id="level"></span> EXP:<span id="exp"></span></div>
-  <div>💰 <span id="gold"></span></div>
+  <img id="sprite" class="sprite">
+  <div class="stats">
+    Lv.<span id="level"></span>/50<br>
+    EXP <span id="exp"></span><br>
+    💰 <span id="gold"></span>
+  </div>
 </header>
 
-<section id="home" class="active">
-  <div class="card">
-    <h3>デイリーミッション</h3>
-    <div id="daily"></div>
-  </div>
-</section>
-
-<section id="tasks">
+<section id="tasks" class="active">
   <div class="card">
     <input id="taskTitle" placeholder="タスク名">
-    <select id="taskDifficulty">
-      <option value="1">簡単</option>
-      <option value="2" selected>普通</option>
-      <option value="3">難しい</option>
+    <select id="taskUrgency">
+      <option value="1">緊急度：低</option>
+      <option value="2">緊急度：中</option>
+      <option value="3">緊急度：高</option>
     </select>
-    <button onclick="addTask()">追加</button>
+    <input id="taskDeadline" type="date">
+    <button onclick="addTask()">タスク追加</button>
   </div>
   <div id="taskList"></div>
 </section>
 
-<section id="shop">
+<section id="study">
   <div class="card">
-    <h3>交換所</h3>
-    <button onclick="buyBoost()">EXPブースト（50G）</button>
+    <input id="studyMinutes" type="number" placeholder="勉強時間（分）">
+    <button onclick="addStudy()">記録</button>
+  </div>
+
+  <div class="card">
+    合計学習時間：<span id="totalStudy">0</span> 分<br>
+    連続学習日数：<span id="streak">0</span> 日
+  </div>
+
+  <div class="card" style="text-align:center">
+    <button onclick="changeWeek(-1)">◀</button>
+    <button id="nextWeekBtn" onclick="changeWeek(1)">▶</button><br><br>
+    <canvas id="studyChart" width="350" height="220"></canvas>
   </div>
 </section>
 
-<section id="titles">
-  <div id="titleList"></div>
+<section id="shop">
+  <div class="card">
+    <input id="itemName" placeholder="リワード名">
+    <input id="itemCost" type="number" placeholder="必要G">
+    <button onclick="addShopItem()">追加</button>
+  </div>
+  <div id="shopList"></div>
 </section>
 
 <nav>
-  <button class="active" onclick="showTab('home')">ホーム</button>
-  <button onclick="showTab('tasks')">タスク</button>
-  <button onclick="showTab('shop')">交換所</button>
-  <button onclick="showTab('titles')">称号</button>
+  <button class="active" onclick="showTab('tasks',this)">タスク</button>
+  <button onclick="showTab('study',this)">勉強</button>
+  <button onclick="showTab('shop',this)">交換所</button>
 </nav>
 
+<div id="effectText"></div>
+
 <script>
-const today = new Date().toISOString().slice(0,10)
+let busy=false;
+let weekOffset=0;
 
-let data = JSON.parse(localStorage.getItem("studyRPG")) || {
-  name: "",
-  level: 1,
-  exp: 0,
-  gold: 0,
-  boost: 1,
-  tasks: [],
-  dailyDone: false,
-  lastDailyDate: "",
-  titles: []
+let data=JSON.parse(localStorage.getItem("studyPopRPG"))||{
+  name:"",
+  level:1,exp:0,gold:0,
+  tasks:[],shopItems:[],studyLogs:{}
+};
+
+if(!data.name)data.name=prompt("プレイヤー名を入力");
+const save=()=>localStorage.setItem("studyPopRPG",JSON.stringify(data));
+const expToNext=()=>data.level*100;
+
+function spriteByLevel(){
+  if(data.level<15)return"sprite1.png";
+  if(data.level<30)return"sprite2.png";
+  return"sprite3.png";
 }
 
-if (!data.name) {
-  data.name = prompt("プレイヤー名を入力")
+/* 通常演出 */
+function showEffect(text,color){
+  effectText.textContent=text;
+  effectText.style.color=color;
+  effectText.style.fontSize="36px";
+  effectText.style.display="block";
+  setTimeout(()=>effectText.style.display="none",600);
 }
 
-if (data.lastDailyDate !== today) {
-  data.dailyDone = false
-  data.lastDailyDate = today
-  save()
+/* レベルアップ演出 */
+function showLevelUp(){
+  effectText.textContent="LEVEL UP!!";
+  effectText.style.color="#FFD700";
+  effectText.style.fontSize="42px";
+  effectText.style.display="block";
+  setTimeout(()=>{
+    effectText.style.display="none";
+    effectText.style.fontSize="36px";
+  },800);
 }
 
-function save() {
-  localStorage.setItem("studyRPG", JSON.stringify(data))
-}
-
-function expToNext() { return data.level * 100 }
-
-function spriteByLevel() {
-  if (data.level < 5) return "sprite1.png"
-  if (data.level < 10) return "sprite2.png"
-  return "sprite3.png"
-}
-
-function addTask() {
-  const titleInput = document.getElementById("taskTitle")
-  const diffInput = document.getElementById("taskDifficulty")
-  if (!titleInput.value) return
-  const task = { title: titleInput.value, difficulty: parseInt(diffInput.value) }
-  data.tasks.push(task)
-  titleInput.value = ""
-  save()
-  render()
-}
-
-function completeTask(i) {
-  const task = data.tasks[i]
-  data.tasks.splice(i,1)
-  const gain = Math.floor(20 * task.difficulty * data.boost)
-  data.exp += gain
-  if (data.exp >= expToNext()) {
-    data.exp = 0
-    data.level++
-    if (data.level === 5) data.titles.push("駆け出し冒険者")
-    if (data.level === 10) data.titles.push("熟練学者")
+/* レベル判定 */
+function levelCheck(){
+  let leveled=false;
+  while(data.exp>=expToNext()&&data.level<50){
+    data.exp-=expToNext();
+    data.level++;
+    leveled=true;
   }
-  save()
-  render()
+  if(leveled) showLevelUp();
 }
 
-function completeDaily() {
-  data.gold += 30
-  data.dailyDone = true
-  data.lastDailyDate = today
-  save()
-  render()
+/* タスク */
+function addTask(){
+  if(!taskTitle.value)return;
+  data.tasks.push({
+    title:taskTitle.value,
+    urgency:+taskUrgency.value,
+    deadline:taskDeadline.value||null
+  });
+  taskTitle.value=taskDeadline.value="";
+  save();render();
+}
+function completeTask(i){
+  if(busy)return;
+  busy=true;
+  const t=data.tasks[i];
+  data.tasks.splice(i,1);
+  data.exp+=t.urgency*30;
+  data.gold+=t.urgency*10;
+  levelCheck();
+  showEffect("完了","#00aaee");
+  save();render();
+  setTimeout(()=>busy=false,600);
 }
 
-function buyBoost() {
-  if (data.gold < 50) return alert("ゴールド不足")
-  data.gold -= 50
-  data.boost = 2
-  save()
-  render()
+/* 勉強 */
+function addStudy(){
+  const min=+studyMinutes.value;
+  if(min<=0)return;
+  const d=new Date().toISOString().split("T")[0];
+  data.studyLogs[d]=(data.studyLogs[d]||0)+min;
+  data.exp+=min;
+  data.gold+=Math.floor(min/2);
+  levelCheck();
+  studyMinutes.value="";
+  showEffect("記録","#00cc66");
+  save();render();
 }
 
-function showTab(id) {
-  document.querySelectorAll("section").forEach(s => s.classList.remove("active"))
-  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"))
-  document.getElementById(id).classList.add("active")
-  event.target.classList.add("active")
+/* 交換所 */
+function addShopItem(){
+  if(!itemName.value||!itemCost.value)return;
+  data.shopItems.push({name:itemName.value,cost:+itemCost.value});
+  itemName.value=itemCost.value="";
+  save();render();
+}
+function buyItem(i){
+  const s=data.shopItems[i];
+  if(data.gold<s.cost)return;
+  data.gold-=s.cost;
+  showEffect("購入","#ff9933");
+  save();render();
 }
 
-function render() {
-  document.getElementById("playerName").textContent = data.name
-  document.getElementById("level").textContent = data.level
-  document.getElementById("exp").textContent = data.exp + "/" + expToNext()
-  document.getElementById("gold").textContent = data.gold
+/* グラフ */
+function getWeekDates(){
+  const t=new Date();
+  const s=new Date(t);
+  s.setDate(t.getDate()-t.getDay()+weekOffset*7);
+  return [...Array(7)].map((_,i)=>{
+    const d=new Date(s);d.setDate(s.getDate()+i);
+    return d;
+  });
+}
+function drawChart(){
+  const c=studyChart;
+  const ctx=c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
 
-  const spriteEl = document.getElementById("sprite");
-  const newSprite = spriteByLevel();
-  if (spriteEl.src.indexOf(newSprite) === -1) {
-    spriteEl.style.opacity = 0;
-    setTimeout(() => {
-      spriteEl.src = newSprite;
-      spriteEl.style.transform = "scale(1.3)";
-      spriteEl.style.opacity = 1;
-      setTimeout(() => { spriteEl.style.transform = "scale(1)"; }, 300);
-    }, 300);
-  }
+  ctx.font="12px 'Kosugi Maru'";
+  ctx.textAlign="center";
 
-  const list = document.getElementById("taskList")
-  list.innerHTML = ""
-  data.tasks.forEach((t, i) => {
-    const div = document.createElement("div")
-    div.className = "card"
-    div.innerHTML = `${t.title} (難易度: ${t.difficulty}) <button onclick="completeTask(${i})">完了</button>`
-    list.appendChild(div)
-  })
+  const dates=getWeekDates();
+  const names=["日","月","火","水","木","金","土"];
+  const vals=dates.map(d=>data.studyLogs[d.toISOString().split("T")[0]]||0);
+  const max=Math.max(60,...vals);
+  const w=c.width/7;
 
-  const daily = document.getElementById("daily")
-  if (!data.dailyDone) {
-    daily.innerHTML = `<button onclick="completeDaily()">タスク1つ完了</button>`
-  } else {
-    daily.textContent = "完了！"
-  }
+  vals.forEach((v,i)=>{
+    const x=i*w;
+    ctx.fillStyle="#000";
+    ctx.fillText(names[i],x+w/2,c.height-22);
+    ctx.fillText((dates[i].getMonth()+1)+"/"+dates[i].getDate(),x+w/2,c.height-8);
+    if(v<=0)return;
+    const h=(v/max)*(c.height-60);
+    ctx.fillStyle="#ff6f91";
+    ctx.fillRect(x+12,c.height-h-30,w-24,h);
+    ctx.fillStyle="#000";
+    ctx.fillText(v+"分",x+w/2,c.height-h-36);
+  });
 
-  const titleList = document.getElementById("titleList")
-  titleList.innerHTML = ""
-  data.titles.forEach(t => {
-    const div = document.createElement("div")
-    div.className = "card"
-    div.textContent = t
-    titleList.appendChild(div)
-  })
+  nextWeekBtn.disabled = weekOffset>=0;
 }
 
-render()
+function changeWeek(n){
+  if(weekOffset+n>0)return;
+  weekOffset+=n;
+  drawChart();
+}
+
+/* タブ */
+function showTab(id,btn){
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  btn.classList.add("active");
+  if(id==="study")drawChart();
+}
+
+/* 描画 */
+function render(){
+  playerName.textContent=data.name;
+  level.textContent=data.level;
+  exp.textContent=data.exp+"/"+expToNext();
+  gold.textContent=data.gold;
+  sprite.src=spriteByLevel();
+
+  taskList.innerHTML="";
+  data.tasks.forEach((t,i)=>{
+    taskList.innerHTML+=`
+    <div class="card">
+      ${t.title}<br>
+      緊急度：${["低","中","高"][t.urgency-1]}<br>
+      <button onclick="completeTask(${i})">完了</button>
+    </div>`;
+  });
+
+  shopList.innerHTML="";
+  data.shopItems.forEach((s,i)=>{
+    shopList.innerHTML+=`
+    <div class="card">
+      ${s.name}<br>
+      必要G：${s.cost}<br>
+      <button onclick="buyItem(${i})">交換</button>
+    </div>`;
+  });
+
+  drawChart();
+}
+
+render();
 </script>
-
 </body>
 </html>
